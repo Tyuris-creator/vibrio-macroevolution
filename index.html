@@ -1,0 +1,1428 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Макроэволюция генома Vibrio cholerae — Отчёт по проекту</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --surface: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --primary: #0f4c81;
+        --primary-light: #e0f2fe;
+        --accent: #0d9488;
+        --accent-light: #ccfbf1;
+        --warn: #b45309;
+        --warn-light: #fef3c7;
+        --code-bg: #0f172a;
+        --code-text: #e2e8f0;
+        --radius: 12px;
+        --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.65;
+      }
+
+      header {
+        background: linear-gradient(
+          135deg,
+          #0b2545 0%,
+          #0f4c81 60%,
+          #0d9488 100%
+        );
+        color: #fff;
+        padding: 3.2rem 1.5rem 2.6rem;
+      }
+
+      .container {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+
+      header h1 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      header .subtitle {
+        margin: 0 0 1.4rem;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 1.05rem;
+        max-width: 780px;
+      }
+
+      .meta-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      .meta-pill {
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        backdrop-filter: blur(6px);
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.88rem;
+      }
+
+      nav.toc {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      nav.toc .container {
+        display: flex;
+        gap: 0.4rem;
+        overflow-x: auto;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+      }
+
+      nav.toc a {
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        white-space: nowrap;
+        transition: 0.15s ease;
+      }
+
+      nav.toc a:hover {
+        background: var(--primary-light);
+        color: var(--primary);
+      }
+
+      main {
+        padding: 2rem 0 4rem;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .kpi-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.2rem 1.3rem;
+        box-shadow: var(--shadow);
+      }
+
+      .kpi-label {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .kpi-value {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin: 0.25rem 0;
+      }
+
+      .kpi-sub {
+        font-size: 0.86rem;
+        color: var(--muted);
+      }
+
+      section.card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.8rem;
+        margin-bottom: 1.75rem;
+        box-shadow: var(--shadow);
+        scroll-margin-top: 4.5rem;
+      }
+
+      h2 {
+        margin: 0 0 1rem;
+        font-size: 1.45rem;
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary-light);
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        margin: 1.5rem 0 0.7rem;
+        font-size: 1.12rem;
+        color: #0f172a;
+      }
+
+      p {
+        margin: 0 0 0.9rem;
+      }
+
+      .callout {
+        border-left: 4px solid var(--accent);
+        background: #f0fdfa;
+        padding: 1rem 1.2rem;
+        border-radius: 0 8px 8px 0;
+        margin: 1rem 0;
+      }
+
+      .callout.warn {
+        border-left-color: var(--warn);
+        background: #fffbeb;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin: 1rem 0 1.2rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+
+      th,
+      td {
+        padding: 0.65rem 0.85rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        background: #f8fafc;
+        font-weight: 700;
+        color: #334155;
+        white-space: nowrap;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr.total-row td {
+        background: #f8fafc;
+        font-weight: 700;
+      }
+
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.87rem;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.18rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .badge-blue {
+        background: var(--primary-light);
+        color: var(--primary);
+      }
+      .badge-teal {
+        background: var(--accent-light);
+        color: #115e59;
+      }
+      .badge-warn {
+        background: var(--warn-light);
+        color: #92400e;
+      }
+      .badge-gray {
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      figure.synteny-fig {
+        margin: 1.2rem 0;
+        text-align: center;
+        background: #fafbfc;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+      }
+
+      figure.synteny-fig img {
+        max-width: 100%;
+        height: auto;
+        max-height: 760px;
+        border-radius: 6px;
+        cursor: zoom-in;
+      }
+
+      figure.synteny-fig figcaption {
+        margin-top: 0.85rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .fig-actions {
+        margin-top: 0.6rem;
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .btn-link {
+        display: inline-block;
+        padding: 0.4rem 0.85rem;
+        border-radius: 8px;
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
+
+      .btn-link.secondary {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
+
+      details {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.7rem 1rem;
+        margin: 0.8rem 0;
+        background: #fafbfc;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .code-block {
+        position: relative;
+        margin: 0.9rem 0 1.2rem;
+      }
+
+      .code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1e293b;
+        color: #cbd5e1;
+        padding: 0.45rem 0.9rem;
+        border-radius: 8px 8px 0 0;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .copy-btn {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+
+      .copy-btn:hover {
+        background: rgba(255, 255, 255, 0.24);
+      }
+
+      pre {
+        margin: 0;
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 0 0 8px 8px;
+        font-size: 0.84rem;
+        line-height: 1.5;
+      }
+
+      ul.clean {
+        margin: 0.5rem 0 1rem;
+        padding-left: 1.35rem;
+      }
+
+      ul.clean li {
+        margin-bottom: 0.45rem;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.88rem;
+        padding: 1.5rem 1rem 3rem;
+      }
+
+      /* Lightbox для увеличения карты Circos */
+      .lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.88);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        cursor: zoom-out;
+      }
+
+      .lightbox.open {
+        display: flex;
+      }
+      .lightbox img {
+        max-width: 96vw;
+        max-height: 94vh;
+        background: #fff;
+        border-radius: 8px;
+      }
+
+      .meta-pill1 {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px; /* Отступ, если добавите иконки */
+        padding: 8px 16px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1f2328;
+        background-color: #f6f8fa;
+        border: 1px solid #d0d7de;
+        border-radius: 9999px; /* Делает идеальную форму капсулы */
+        text-decoration: none;
+        transition: all 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      /* Эффект при наведении */
+      .meta-pill1:hover {
+        background-color: #ffffff;
+        border-color: #0969da;
+        color: #0969da;
+        transform: translateY(-2px); /* Легкое всплытие */
+        box-shadow: 0 4px 12px rgba(9, 105, 218, 0.12);
+      }
+
+      /* Эффект при клике */
+      .meta-pill1:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Макроэволюция генома <em>Vibrio cholerae</em></h1>
+        <p class="subtitle">
+          Сравнительный геномный анализ двух штаммов
+          <em>Vibrio cholerae</em> (Oxford Nanopore): структура хромосом,
+          локализация оперонов рРНК и генов холератоксина <code>ctxAB</code>,
+          синтенное картирование перестроек и оценка полиморфизма.
+        </p>
+        <div class="meta-bar">
+          <span class="meta-pill">Куратор: Евгений Герасимов</span>
+          <span class="meta-pill">Выполнил: Тюрин Михаил Юрьевич</span>
+          <span class="meta-pill"
+            >Данные: SRR29316716 &amp; SRR32556689 (ONT)</span
+          >
+          <span class="meta-pill"
+            >Среда: biocalc / conda <code>assembly</code></span
+          >
+          <a class="meta-pill1" href="https://github.com/Tyuris-creator"
+            >Мой github</a
+          >
+          <a class="meta-pill1" href="https://www.linkedin.com/in/tyuris"
+            >Мой linkedin</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <nav class="toc">
+      <div class="container">
+        <a href="#intro">Введение</a>
+        <a href="#q1">1. Хромосомы и rRNA</a>
+        <a href="#q2">2. Синтенная карта</a>
+        <a href="#q3">3. Холератоксин Ctx</a>
+        <a href="#q4">4. SNP и Indels</a>
+        <a href="#conclusions">Выводы</a>
+        <a href="#protocol">Протокол команд</a>
+      </div>
+    </nav>
+
+    <main class="container">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Размер геномов</div>
+          <div class="kpi-value">4,136 / 4,133 Мб</div>
+          <div class="kpi-sub">
+            SRR29316716 (2 кольца) vs SRR32556689 (4 контига)
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Генный состав</div>
+          <div class="kpi-value">3 654 / 3 652 CDS</div>
+          <div class="kpi-sub">9 оперонов rRNA (28 генов) только на Chr I</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Крупная перестройка</div>
+          <div class="kpi-value">78,8 кб</div>
+          <div class="kpi-sub">Межхромосомная транслокация Chr II → Chr I</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Малые вариации</div>
+          <div class="kpi-value">25 SNP / 16 Indels</div>
+          <div class="kpi-sub">
+            Идентичность &gt; 99,999% (4,09 Мб выровнено)
+          </div>
+        </div>
+      </div>
+
+      <!-- ВВЕДЕНИЕ -->
+      <section id="intro" class="card">
+        <h2>Введение и постановка задачи</h2>
+        <p>
+          Классический геном <em>Vibrio cholerae</em> организован в виде двух
+          кольцевых репликонов: большой хромосомы (Chr I, ~3 Мб), несущей
+          основные гены «домашнего хозяйства» и метаболизма, и малой хромосомы
+          (Chr II, ~1 Мб), обогащённой мобильными элементами и генами
+          горизонтального переноса. Наряду с классической плазмидной гипотезой
+          происхождения Chr II рассматривается модель динамической реорганизации
+          и разделения/слияния единого предкового нуклеоида.
+        </p>
+        <p>
+          В работе проведена сборка <em>de novo</em>, аннотация и сравнительный
+          анализ двух наборов длинных чтений Oxford Nanopore из директории
+          <code>/home/prep01/data/hw/</code>: <strong>SRR29316716</strong> (472
+          МБ, N50 чтений 13 731 п.н.) и <strong>SRR32556689</strong> (882 МБ,
+          N50 чтений 5 054 п.н.).
+        </p>
+      </section>
+
+      <!-- ВОПРОС 1 -->
+      <section id="q1" class="card">
+        <h2>1. Длины хромосом, генный состав и кластеры rRNA</h2>
+
+        <h3>Сборка и распределение генов по контигам</h3>
+        <p>
+          Сборка выполнена в <strong>Flye v2.9.5</strong>, функциональная и
+          структурная аннотация — в <strong>Prokka v1.15.6</strong>
+          (с использованием Prodigal, Barrnap и ARAGORN). У обоих штаммов также
+          аннотирована 1 молекула tmRNA.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Штамм</th>
+                <th>Контиг (репликон)</th>
+                <th class="num">Длина, п.н.</th>
+                <th class="num">Покрытие</th>
+                <th>Кольцевой</th>
+                <th class="num">CDS</th>
+                <th class="num">tRNA</th>
+                <th class="num">rRNA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="3"><strong>SRR29316716</strong></td>
+                <td class="mono">
+                  SRR29316716_contig_2
+                  <span class="badge badge-blue">Chr I</span>
+                </td>
+                <td class="num">3 058 918</td>
+                <td class="num">61×</td>
+                <td><span class="badge badge-teal">Да (Y)</span></td>
+                <td class="num">2 663</td>
+                <td class="num">97</td>
+                <td class="num">28</td>
+              </tr>
+              <tr>
+                <td class="mono">
+                  SRR29316716_contig_1
+                  <span class="badge badge-gray">Chr II</span>
+                </td>
+                <td class="num">1 077 208</td>
+                <td class="num">56×</td>
+                <td><span class="badge badge-teal">Да (Y)</span></td>
+                <td class="num">991</td>
+                <td class="num">4</td>
+                <td class="num">0</td>
+              </tr>
+              <tr class="total-row">
+                <td>Итого SRR29316716</td>
+                <td class="num">4 136 126</td>
+                <td class="num">59×</td>
+                <td>2 контига</td>
+                <td class="num">3 654</td>
+                <td class="num">101</td>
+                <td class="num">28</td>
+              </tr>
+              <tr>
+                <td rowspan="5"><strong>SRR32556689</strong></td>
+                <td class="mono">
+                  SRR32556689_contig_2
+                  <span class="badge badge-blue">Chr I + фрагмент Chr II</span>
+                </td>
+                <td class="num">3 143 111</td>
+                <td class="num">117×</td>
+                <td><span class="badge badge-warn">Нет (N)</span></td>
+                <td class="num">2 776</td>
+                <td class="num">97</td>
+                <td class="num">28</td>
+              </tr>
+              <tr>
+                <td class="mono">
+                  SRR32556689_contig_1
+                  <span class="badge badge-gray">Chr II (осн.)</span>
+                </td>
+                <td class="num">959 736</td>
+                <td class="num">113×</td>
+                <td><span class="badge badge-warn">Нет (N)</span></td>
+                <td class="num">835</td>
+                <td class="num">4</td>
+                <td class="num">0</td>
+              </tr>
+              <tr>
+                <td class="mono">
+                  SRR32556689_contig_4
+                  <span class="badge badge-gray">фрагм. Chr II</span>
+                </td>
+                <td class="num">19 755</td>
+                <td class="num">34×</td>
+                <td><span class="badge badge-warn">Нет (N)</span></td>
+                <td class="num">30</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+              </tr>
+              <tr>
+                <td class="mono">
+                  SRR32556689_contig_3
+                  <span class="badge badge-gray">фрагм. Chr II</span>
+                </td>
+                <td class="num">10 033</td>
+                <td class="num">54×</td>
+                <td><span class="badge badge-warn">Нет (N)</span></td>
+                <td class="num">11</td>
+                <td class="num">0</td>
+                <td class="num">0</td>
+              </tr>
+              <tr class="total-row">
+                <td>Итого SRR32556689</td>
+                <td class="num">4 132 635</td>
+                <td class="num">115×</td>
+                <td>4 контига</td>
+                <td class="num">3 652</td>
+                <td class="num">101</td>
+                <td class="num">28</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <strong>Наблюдение по балансу генов:</strong> суммарный генный
+          репертуар практически идентичен (3 654 vs 3 652 CDS), однако у
+          <strong>SRR32556689</strong> большая хромосома увеличилась на
+          <strong>+84,2 кб (+113 CDS)</strong>, а основная часть малой хромосомы
+          сократилась на <strong>−117,5 кб (−156 CDS)</strong>, из которых 41
+          CDS оказались в малых контигах <code>contig_3</code> и
+          <code>contig_4</code>, а оставшаяся часть перенесена на Chr I.
+          Незамкнутость контигов у SRR32556689 объясняется более короткими
+          чтениями (N50 = 5,05 кб против 13,73 кб у SRR29316716), не
+          перекрывающими длинные повторы в точках стыка.
+        </div>
+
+        <h3>Расположение кластеров генов рибосомной РНК (rRNA)</h3>
+        <p>
+          В обоих геномах обнаружено ровно
+          <strong>9 полных оперонов рРНК</strong> (16S–23S–5S; первый оперон
+          содержит дополнительную копию 5S рРНК, всего
+          <strong>28 генов rRNA</strong>).
+          <strong
+            >Все 9 кластеров расположены исключительно на большой хромосоме
+            (<code>contig_2</code>)</strong
+          >; на малой хромосоме гены рРНК полностью отсутствуют. Первые 4
+          кластера ориентированы по цепи <code>-</code>, следующие 5 — по цепи
+          <code>+</code>, что соответствует двунаправленной репликации от точки
+          <em>oriC</em>
+          (между кластерами №4 и №5).
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Оперон</th>
+                <th>Состав</th>
+                <th>Цепь</th>
+                <th>Координаты в SRR29316716 (contig_2)</th>
+                <th>Координаты в SRR32556689 (contig_2)</th>
+                <th class="num">Сдвиг, п.н.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Кластер 1</td>
+                <td>16S–23S–5S–5S</td>
+                <td class="mono">-</td>
+                <td class="mono">
+                  3 058 640..3 058 755 и 7..5 190 <em>(стык кольца)</em>
+                </td>
+                <td class="mono">742 045..747 510</td>
+                <td class="num">+742 320</td>
+              </tr>
+              <tr>
+                <td>Кластер 2</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">-</td>
+                <td class="mono">251 665..257 051</td>
+                <td class="mono">993 985..999 371</td>
+                <td class="num">+742 320</td>
+              </tr>
+              <tr>
+                <td>Кластер 3</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">-</td>
+                <td class="mono">257 411..262 516</td>
+                <td class="mono">999 731..1 004 836</td>
+                <td class="num">+742 320</td>
+              </tr>
+              <tr>
+                <td>Кластер 4</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">-</td>
+                <td class="mono">354 653..359 753</td>
+                <td class="mono">1 096 973..1 102 073</td>
+                <td class="num">+742 320</td>
+              </tr>
+              <tr>
+                <td>Кластер 5</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">+</td>
+                <td class="mono">435 711..441 072</td>
+                <td class="mono">1 178 029..1 183 390</td>
+                <td class="num">+742 318</td>
+              </tr>
+              <tr>
+                <td>Кластер 6</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">+</td>
+                <td class="mono">609 561..614 745</td>
+                <td class="mono">1 351 879..1 357 063</td>
+                <td class="num">+742 318</td>
+              </tr>
+              <tr>
+                <td>Кластер 7</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">+</td>
+                <td class="mono">687 166..692 350</td>
+                <td class="mono">1 429 483..1 434 667</td>
+                <td class="num">+742 317</td>
+              </tr>
+              <tr>
+                <td>Кластер 8</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">+</td>
+                <td class="mono">692 710..698 070</td>
+                <td class="mono">1 435 027..1 440 387</td>
+                <td class="num">+742 317</td>
+              </tr>
+              <tr>
+                <td>Кластер 9</td>
+                <td>16S–23S–5S</td>
+                <td class="mono">+</td>
+                <td class="mono">1 141 190..1 146 295</td>
+                <td class="mono">1 883 509..1 888 614</td>
+                <td class="num">+742 319</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ВОПРОС 2 -->
+      <section id="q2" class="card">
+        <h2>2. Синтенная карта геномов и анализ перестроек</h2>
+        <p>
+          Поиск синтенных блоков (минимальная длина блока 5 000 п.н., режим
+          <code>-s loose</code>) выполнен с помощью <strong>Sibelia</strong>,
+          визуализация — в <strong>Circos v0.69-8</strong>. Для количественной
+          верификации блоков и ориентаций проведено полногеномное выравнивание
+          <strong>minimap2</strong> (<code>-x asm5</code>).
+        </p>
+
+        <figure class="synteny-fig">
+          <img
+            src="circos.png"
+            alt="Синтенная карта Circos сравнения геномов SRR29316716 и SRR32556689"
+            id="circosImg"
+          />
+          <figcaption>
+            <strong>Рисунок 1.</strong> Кольцевая синтенная карта сравнения
+            сборок <em>V. cholerae</em> SRR29316716 и SRR32556689 (Sibelia +
+            Circos). Нажмите на изображение для увеличения.
+          </figcaption>
+          <div class="fig-actions">
+            <a class="btn-link" href="circos.svg" target="_blank"
+              >Открыть векторную версию (SVG)</a
+            >
+            <a class="btn-link secondary" href="circos.png" target="_blank"
+              >Открыть PNG в новой вкладке</a
+            >
+          </div>
+        </figure>
+
+        <details>
+          <summary>
+            Расшифровка подписей идеограмм на карте Circos (из
+            circos.sequences.txt)
+          </summary>
+          <ul class="clean" style="margin-top: 0.6rem">
+            <li>
+              <code class="mono">seq1</code> —
+              <strong>SRR29316716_contig_1</strong> (Chr II, 1 077 208 п.н.)
+            </li>
+            <li>
+              <code class="mono">seq2</code> —
+              <strong>SRR29316716_contig_2</strong> (Chr I, 3 058 918 п.н.)
+            </li>
+            <li>
+              <code class="mono">seq3</code> —
+              <strong>SRR32556689_contig_1</strong> (Chr II основная часть, 959
+              736 п.н.)
+            </li>
+            <li>
+              <code class="mono">seq4</code> —
+              <strong>SRR32556689_contig_2</strong> (Chr I + транслоцированный
+              участок Chr II, 3 143 111 п.н.)
+            </li>
+            <li>
+              <code class="mono">seq5</code> —
+              <strong>SRR32556689_contig_3</strong> (фрагмент Chr II, 10 033
+              п.н.)
+            </li>
+            <li>
+              <code class="mono">seq6</code> —
+              <strong>SRR32556689_contig_4</strong> (фрагмент Chr II, 19 755
+              п.н.)
+            </li>
+          </ul>
+        </details>
+
+        <h3>
+          Синтенные блоки по данным полногеномного выравнивания (minimap2)
+        </h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Query (SRR32556689)</th>
+                <th>Координаты Query</th>
+                <th>Цепь</th>
+                <th>Target (SRR29316716)</th>
+                <th>Координаты Target</th>
+                <th class="num">Длина, п.н.</th>
+                <th>Интерпретация</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">SRR32556689_contig_2</td>
+                <td class="mono">0..742 323</td>
+                <td class="mono">+</td>
+                <td class="mono">SRR29316716_contig_2</td>
+                <td class="mono">2 316 595..3 058 918</td>
+                <td class="num">742 325</td>
+                <td>Коллинеарный блок Chr I (сдвиг начала кольца)</td>
+              </tr>
+              <tr>
+                <td class="mono">SRR32556689_contig_2</td>
+                <td class="mono">742 320..3 068 961</td>
+                <td class="mono">+</td>
+                <td class="mono">SRR29316716_contig_2</td>
+                <td class="mono">0..2 326 640</td>
+                <td class="num">2 326 645</td>
+                <td>Коллинеарный блок Chr I (перекрытие ~10 кб)</td>
+              </tr>
+              <tr style="background: #fffbeb">
+                <td class="mono"><strong>SRR32556689_contig_2</strong></td>
+                <td class="mono"><strong>3 064 269..3 143 111</strong></td>
+                <td class="mono"><strong>-</strong></td>
+                <td class="mono"><strong>SRR29316716_contig_1</strong></td>
+                <td class="mono"><strong>998 367..1 077 208</strong></td>
+                <td class="num"><strong>78 842</strong></td>
+                <td>
+                  <span class="badge badge-warn"
+                    >Межхромосомная транслокация</span
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">SRR32556689_contig_1</td>
+                <td class="mono">0..959 736</td>
+                <td class="mono">-</td>
+                <td class="mono">SRR29316716_contig_1</td>
+                <td class="mono">38 632..998 366</td>
+                <td class="num">959 736</td>
+                <td>Основной блок Chr II (обратная ориентация сборки)</td>
+              </tr>
+              <tr>
+                <td class="mono">SRR32556689_contig_4</td>
+                <td class="mono">0..19 755</td>
+                <td class="mono">-</td>
+                <td class="mono">SRR29316716_contig_1</td>
+                <td class="mono">17 681..37 436</td>
+                <td class="num">19 755</td>
+                <td>Фрагмент Chr II</td>
+              </tr>
+              <tr>
+                <td class="mono">SRR32556689_contig_3</td>
+                <td class="mono">0..10 027</td>
+                <td class="mono">+</td>
+                <td class="mono">SRR29316716_contig_1</td>
+                <td class="mono">7 393..17 420</td>
+                <td class="num">10 027</td>
+                <td>Фрагмент Chr II</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Описание крупных перестроек</h3>
+        <ul class="clean">
+          <li>
+            <strong>Крупная межхромосомная транслокация (78,8 кб):</strong>
+            терминальный участок большой хромосомы
+            <code>SRR32556689_contig_2</code> (координаты
+            <code>3 064 269..3 143 111</code>) выравнивается в обратной
+            ориентации (<code>-</code>) на малую хромосому
+            <code>SRR29316716_contig_1</code> (<code>998 367..1 077 208</code>).
+            На карте Circos эта перестройка видна как чёткая лента, соединяющая
+            большую хромосому <code>seq4</code> с малой хромосомой
+            <code>seq1</code>. В области стыка (~3,06–3,09 Мб на
+            <code>SRR32556689_contig_2</code>) Prokka аннотирует копии
+            транспозазы семейства IS3 (<em>ISVch4</em>), что указывает на
+            вероятный механизм гомологичной рекомбинации по мобильным элементам.
+          </li>
+          <li>
+            <strong
+              >Кольцевая перестановка (артефакт линейного представления кольца,
+              не перестройка):</strong
+            >
+            основная часть Chr I (<code>seq2</code> и <code>seq4</code>)
+            сохраняет полную коллинеарность порядка генов, но точка линеаризации
+            кольцевой хромосомы сдвинута на 742 320 п.н. (на карте Circos это
+            проявляется двумя перекрещивающимися широкими лентами между
+            <code>seq2</code> и <code>seq4</code>).
+          </li>
+          <li>
+            <strong>Фрагментация Chr II у SRR32556689:</strong> оставшаяся часть
+            малой хромосомы <code>SRR29316716_contig_1</code> (0..998 366 п.н.)
+            представлена тремя неперекрывающимися контигами (<code
+              >contig_1</code
+            >
+            — 959,7 кб, <code>contig_4</code> — 19,8 кб и
+            <code>contig_3</code> — 10,0 кб). Невыровненные интервалы (~7,4 кб в
+            начале и короткие разрывы ~0,26 кб и ~1,2 кб) соответствуют
+            повторяющимся участкам, где длины ридов SRR32556689 оказалось
+            недостаточно для замыкания кольца.
+          </li>
+        </ul>
+
+        <h3>Как точнее определить координаты точек разрыва (breakpoints)?</h3>
+        <p>
+          Для прецизионной локализации границ перестроек (с точностью до
+          нуклеотида) следует:
+        </p>
+        <ul class="clean">
+          <li>
+            Проанализировать файл <code>blocks_coords.txt</code> (вывод Sibelia)
+            или детальное выравнивание <code>minimap2 -x asm5 --cs</code> /
+            <code>nucmer</code> + <code>show-coords</code>, найдя точные границы
+            соседних блоков, в которых меняется целевая хромосома или цепь (в
+            нашем случае это зона перекрытия
+            <code>3 064 269..3 068 961</code> на
+            <code>SRR32556689_contig_2</code>).
+          </li>
+          <li>
+            Картировать исходные длинные чтения ONT (<code
+              >minimap2 -ax map-ont</code
+            >) обоих штаммов на обе сборки и проверить в браузере генома (IGV)
+            наличие «сквозных» чтений (spanning reads), непрерывно перекрывающих
+            химерный стык Chr I / Chr II — это одновременно подтверждает
+            реальность перестройки (отличая её от химеры сборки) и даёт точные
+            координаты границ.
+          </li>
+          <li>
+            Извлечь ±10 кб вокруг точки стыка и сопоставить с GFF-аннотацией и
+            локальным BLAST/dot-plot для идентификации повторов, IS-элементов,
+            профагов или оперонов рРНК, опосредовавших рекомбинацию.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ВОПРОС 3 -->
+      <section id="q3" class="card">
+        <h2>3. Локализация генов холератоксина (Ctx)</h2>
+        <p>
+          Поиск субъединиц холератоксина A (<code>ctxA.pep.fa</code>,
+          <code>WP_001881225.1</code>), B (<code>ctxB.pep.fa</code>,
+          <code>WP_000593522.1</code>) и дополнительно белка
+          <code>TcpS</code> (<code>TcpS.pep.fa</code>,
+          <code>WP_001022338.1</code>) из
+          <code>/home/prep01/data/db/prot/</code> выполнен методом
+          <strong>tblastn</strong> (поиск белковых последовательностей по
+          нуклеотидным сборкам в 6 рамках считывания, порог
+          <code>E-value &lt; 1e-5</code>).
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Штамм</th>
+                <th>Белок (RefSeq ID)</th>
+                <th>Хромосома</th>
+                <th>Координаты (старт..конец)</th>
+                <th>Цепь</th>
+                <th class="num">Идентичность</th>
+                <th class="num">Покрытие (aa)</th>
+                <th class="num">E-value</th>
+                <th class="num">Bitscore</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="3"><strong>SRR29316716</strong></td>
+                <td>
+                  <strong>CtxA</strong> (<span class="mono">WP_001881225.1</span
+                  >)
+                </td>
+                <td class="mono">SRR29316716_contig_2 (Chr I)</td>
+                <td class="mono">1 941 106..1 940 333</td>
+                <td class="mono">-</td>
+                <td class="num">100,00%</td>
+                <td class="num">258 / 258</td>
+                <td class="num mono">3.53e-167</td>
+                <td class="num">509</td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>CtxB</strong> (<span class="mono">WP_000593522.1</span
+                  >)
+                </td>
+                <td class="mono">SRR29316716_contig_2 (Chr I)</td>
+                <td class="mono">1 940 333..1 939 962</td>
+                <td class="mono">-</td>
+                <td class="num">98,39%</td>
+                <td class="num">124 / 124</td>
+                <td class="num mono">2.39e-81</td>
+                <td class="num">256</td>
+              </tr>
+              <tr>
+                <td>TcpS (<span class="mono">WP_001022338.1</span>)</td>
+                <td class="mono">SRR29316716_contig_2 (Chr I)</td>
+                <td class="mono">1 271 468..1 271 872</td>
+                <td class="mono">+</td>
+                <td class="num">100,00%</td>
+                <td class="num">135 / 152</td>
+                <td class="num mono">1.89e-72</td>
+                <td class="num">233</td>
+              </tr>
+              <tr>
+                <td rowspan="3"><strong>SRR32556689</strong></td>
+                <td>
+                  <strong>CtxA</strong> (<span class="mono">WP_001881225.1</span
+                  >)
+                </td>
+                <td class="mono">SRR32556689_contig_2 (Chr I)</td>
+                <td class="mono">2 683 428..2 682 655</td>
+                <td class="mono">-</td>
+                <td class="num">100,00%</td>
+                <td class="num">258 / 258</td>
+                <td class="num mono">3.53e-167</td>
+                <td class="num">509</td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>CtxB</strong> (<span class="mono">WP_000593522.1</span
+                  >)
+                </td>
+                <td class="mono">SRR32556689_contig_2 (Chr I)</td>
+                <td class="mono">2 682 655..2 682 284</td>
+                <td class="mono">-</td>
+                <td class="num">98,39%</td>
+                <td class="num">124 / 124</td>
+                <td class="num mono">2.39e-81</td>
+                <td class="num">256</td>
+              </tr>
+              <tr>
+                <td>TcpS (<span class="mono">WP_001022338.1</span>)</td>
+                <td class="mono">SRR32556689_contig_2 (Chr I)</td>
+                <td class="mono">2 013 788..2 014 192</td>
+                <td class="mono">+</td>
+                <td class="num">100,00%</td>
+                <td class="num">135 / 152</td>
+                <td class="num mono">1.89e-72</td>
+                <td class="num">233</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <strong>Вывод по локализации Ctx:</strong> у обоих штаммов гены
+          <code>ctxA</code> и <code>ctxB</code> расположены в виде единого
+          тандемного оперона <code>ctxAB</code> (в составе профага CTXφ) на
+          обратной цепи (<code>-</code>)
+          <strong>большой хромосомы (Chr I, <code>contig_2</code>)</strong>.
+          Разница координат между штаммами составляет ровно
+          <strong>+742 322 п.н.</strong> (для <code>TcpS</code> — +742 320
+          п.н.), что полностью совпадает с кольцевым сдвигом начала сборки Chr
+          I. Таким образом, локус профага CTXφ не затронут перестройками, а
+          аминокислотные последовательности обеих субъединиц у штаммов
+          идентичны.
+        </div>
+      </section>
+
+      <!-- ВОПРОС 4 -->
+      <section id="q4" class="card">
+        <h2>4. Оценка вариаций между геномами (SNP и Indels)</h2>
+        <p>
+          Поиск малых вариаций выполнен путём выравнивания сборки
+          <strong>SRR32556689</strong> на референсную замкнутую сборку
+          <strong>SRR29316716</strong> через
+          <code>minimap2 -cx asm5 --cs</code> с последующим вызовом вариантов в
+          <code>paftools.js call</code>. Однозначным выравниванием (1-к-1)
+          покрыто <strong>4 087 448 п.н.</strong> (98,82% длины генома
+          SRR29316716).
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Репликон (референс SRR29316716)</th>
+                <th class="num">Длина, Мб</th>
+                <th class="num">SNP</th>
+                <th class="num">Плотность SNP (на 1 Мб)</th>
+                <th class="num">Indels (все 1 п.н.)</th>
+                <th class="num">Всего вариантов</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">
+                  SRR29316716_contig_2
+                  <span class="badge badge-blue">Chr I</span>
+                </td>
+                <td class="num">3,059</td>
+                <td class="num">13</td>
+                <td class="num">4,25</td>
+                <td class="num">13</td>
+                <td class="num">26</td>
+              </tr>
+              <tr>
+                <td class="mono">
+                  SRR29316716_contig_1
+                  <span class="badge badge-gray">Chr II</span>
+                </td>
+                <td class="num">1,077</td>
+                <td class="num">12</td>
+                <td class="num">11,14</td>
+                <td class="num">3</td>
+                <td class="num">15</td>
+              </tr>
+              <tr class="total-row">
+                <td>Итого по геному</td>
+                <td class="num">4,136</td>
+                <td class="num">25 (ts/tv = 5,25)</td>
+                <td class="num">6,04</td>
+                <td class="num">16 (10 ins / 6 del)</td>
+                <td class="num">41</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <strong>Методическое и биологическое замечание:</strong>
+          <ul class="clean" style="margin-bottom: 0">
+            <li>
+              <strong>Природа indels:</strong> все 16 найденных инделов имеют
+              длину строго <strong>1 п.н.</strong>
+              (10 вставок и 6 делеций; инделов длиной 2 п.н. и более не
+              обнаружено — 0). В сборках, полученных исключительно по чтениям
+              Oxford Nanopore без полировки короткими чтениями Illumina,
+              единичные 1-п.н. инделы преимущественно представляют собой
+              остаточные ошибки в гомополимерных трактах.
+            </li>
+            <li>
+              <strong>Скорость эволюции хромосом:</strong> даже при крайне
+              близком родстве штаммов (всего 25 SNP, отношение транзиций к
+              трансверсиям <code>ts/tv = 5,25</code>) удельная плотность
+              точечных замен на малой хромосоме Chr II (~11,1 SNP/Мб) в
+              <strong>2,6 раза выше</strong>, чем на консервативной Chr I (~4,3
+              SNP/Мб).
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ВЫВОДЫ -->
+      <section id="conclusions" class="card">
+        <h2>Общие выводы</h2>
+        <p>
+          Проведённый анализ двух близкородственных штаммов
+          <em>Vibrio cholerae</em> (<strong>SRR29316716</strong> и
+          <strong>SRR32556689</strong>, расходящихся всего на 25 SNP по всему
+          4,13-мегабазному геному) наглядно иллюстрирует макроэволюционную
+          пластичность двуххромосомного генома:
+        </p>
+        <ul class="clean">
+          <li>
+            Несмотря на сохранение классической функциональной асимметрии (все 9
+            кластеров rRNA, 97 из 101 tRNA и оперон холератоксина
+            <code>ctxAB</code> закреплены на большой хромосоме Chr I), граница
+            между репликонами не является жёстко фиксированной.
+          </li>
+          <li>
+            Даже на коротких эволюционных дистанциях между практически
+            клональными штаммами происходят крупные
+            <strong>межхромосомные обмены и слияния сегментов (78,8 кб)</strong
+            >, по-видимому опосредованные повторяющимися IS-элементами (в
+            частности IS3 / <em>ISVch4</em>), что согласуется с представлениями
+            о динамическом формировании и реорганизации двух хромосом
+            <em>V. cholerae</em>.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ПРОТОКОЛ -->
+      <section id="protocol" class="card">
+        <h2>Протокол выполнения (команды на сервере biocalc)</h2>
+        <p>
+          Все этапы выполнены в активной среде
+          <code>conda activate assembly</code> на сервере
+          <code>biocalc</code> (16 ядер CPU, рабочая директория
+          <code>~/vibrio_project</code>).
+        </p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span
+              >Этап 0. Подготовка структуры каталогов и ссылок на данные</span
+            >
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>mkdir -p ~/vibrio_project/{reads,assembly,annotation,synteny,ctx_blast,variants,report}
+cd ~/vibrio_project
+
+ln -s /home/prep01/data/hw/SRR29316716.fastq reads/
+ln -s /home/prep01/data/hw/SRR32556689.fastq reads/
+
+conda activate assembly</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span
+              >Этап 1. Сборка геномов de novo (Flye) и переименование
+              контигов</span
+            >
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>flye --nano-raw reads/SRR29316716.fastq --out-dir assembly/SRR29316716
+flye --nano-raw reads/SRR32556689.fastq --out-dir assembly/SRR32556689
+
+cat assembly/SRR29316716/assembly_info.txt
+cat assembly/SRR32556689/assembly_info.txt
+
+sed 's/^&gt;/&gt;SRR29316716_/' assembly/SRR29316716/assembly.fasta &gt; synteny/SRR29316716.fasta
+sed 's/^&gt;/&gt;SRR32556689_/' assembly/SRR32556689/assembly.fasta &gt; synteny/SRR32556689.fasta</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span
+              >Этап 2. Аннотация геномов (Prokka) и извлечение статистики по CDS
+              / rRNA</span
+            >
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>prokka --outdir annotation/SRR29316716 --prefix SRR29316716 --cpus 8 \
+  --kingdom Bacteria --genus Vibrio --species cholerae \
+  synteny/SRR29316716.fasta
+
+prokka --outdir annotation/SRR32556689 --prefix SRR32556689 --cpus 8 \
+  --kingdom Bacteria --genus Vibrio --species cholerae \
+  synteny/SRR32556689.fasta
+
+# Сводная статистика и число генов на каждый контиг
+cat annotation/SRR29316716/SRR29316716.txt
+cat annotation/SRR32556689/SRR32556689.txt
+
+awk -F'\t' '/^##FASTA/{exit} !/^#/ &amp;&amp; ($3=="CDS"||$3=="tRNA"||$3=="rRNA"){c[$1,$3]++; k[$1]=1}
+  END{for(i in k) printf "%-22s CDS=%-5d tRNA=%-4d rRNA=%-4d\n", i, c[i,"CDS"]+0, c[i,"tRNA"]+0, c[i,"rRNA"]+0}' \
+  annotation/SRR29316716/SRR29316716.gff | sort
+
+awk -F'\t' '/^##FASTA/{exit} !/^#/ &amp;&amp; ($3=="CDS"||$3=="tRNA"||$3=="rRNA"){c[$1,$3]++; k[$1]=1}
+  END{for(i in k) printf "%-22s CDS=%-5d tRNA=%-4d rRNA=%-4d\n", i, c[i,"CDS"]+0, c[i,"tRNA"]+0, c[i,"rRNA"]+0}' \
+  annotation/SRR32556689/SRR32556689.gff | sort
+
+# Координаты генов rRNA
+awk -F'\t' '/^##FASTA/{exit} $3=="rRNA"{p=$9; sub(/.*product=/,"",p); sub(/;.*/,"",p);
+  printf "%-22s %10d %10d %2s  %s\n", $1, $4, $5, $7, p}' annotation/SRR29316716/SRR29316716.gff
+
+awk -F'\t' '/^##FASTA/{exit} $3=="rRNA"{p=$9; sub(/.*product=/,"",p); sub(/;.*/,"",p);
+  printf "%-22s %10d %10d %2s  %s\n", $1, $4, $5, $7, p}' annotation/SRR32556689/SRR32556689.gff</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span
+              >Этап 3. Синтенная карта (Sibelia + Circos) и выравнивание блоков
+              (minimap2)</span
+            >
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>Sibelia -s loose -m 5000 -o synteny/sibelia_out \
+  synteny/SRR29316716.fasta synteny/SRR32556689.fasta
+
+cd synteny/sibelia_out/circos
+circos -conf circos.conf
+cd ~/vibrio_project
+
+cat synteny/sibelia_out/circos/circos.sequences.txt
+
+minimap2 -x asm5 -c synteny/SRR29316716.fasta synteny/SRR32556689.fasta &gt; synteny/comparison.paf
+awk '$11 &gt; 1000 {printf "%-22s %10d %10d  %s  %-22s %10d %10d  len=%d\n", $1, $3, $4, $5, $6, $8, $9, $11}' \
+  synteny/comparison.paf | sort -k5,5 -k6,6n</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>Этап 4. Поиск генов холератоксина Ctx (tblastn)</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>makeblastdb -in synteny/SRR29316716.fasta -dbtype nucl -out ctx_blast/SRR29316716_db
+makeblastdb -in synteny/SRR32556689.fasta -dbtype nucl -out ctx_blast/SRR32556689_db
+
+cat /home/prep01/data/db/prot/ctxA.pep.fa \
+    /home/prep01/data/db/prot/ctxB.pep.fa \
+    /home/prep01/data/db/prot/TcpS.pep.fa &gt; ctx_blast/query.faa
+
+tblastn -query ctx_blast/query.faa -db ctx_blast/SRR29316716_db \
+  -outfmt "6 qseqid sseqid pident length qlen sstart send evalue bitscore" \
+  -evalue 1e-5 &gt; ctx_blast/SRR29316716_ctx.tsv
+
+tblastn -query ctx_blast/query.faa -db ctx_blast/SRR32556689_db \
+  -outfmt "6 qseqid sseqid pident length qlen sstart send evalue bitscore" \
+  -evalue 1e-5 &gt; ctx_blast/SRR32556689_ctx.tsv
+
+column -t ctx_blast/SRR29316716_ctx.tsv
+column -t ctx_blast/SRR32556689_ctx.tsv</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>Этап 5. Подсчёт SNP и Indels (minimap2 + paftools.js)</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              Копировать
+            </button>
+          </div>
+          <pre><code>minimap2 -cx asm5 --cs synteny/SRR29316716.fasta synteny/SRR32556689.fasta \
+  | sort -k6,6 -k8,8n \
+  | paftools.js call -f synteny/SRR29316716.fasta - &gt; variants/s1_vs_s2.vcf
+
+awk '!/^#/ {
+    if (length($4)==1 &amp;&amp; length($5)==1) snp++
+    else if (length($4) &gt; length($5)) del++
+    else if (length($4) &lt; length($5)) ins++
+    else mnp++
+} END {
+    printf "SNPs: %d\nInsertions: %d\nDeletions: %d\nIndels all: %d\nTotal: %d\n",
+           snp+0, ins+0, del+0, ins+del+0, snp+ins+del+mnp+0
+}' variants/s1_vs_s2.vcf</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Проект «Макроэволюция генома <em>Vibrio cholerae</em>» · Сборка и
+      сравнительный анализ (Flye, Prokka, Sibelia, Circos, minimap2, BLAST+)
+    </footer>
+
+    <div class="lightbox" id="lightbox">
+      <img src="circos.png" alt="Увеличенная синтенная карта Circos" />
+    </div>
+
+    <script>
+      const circosImg = document.getElementById("circosImg");
+      const lightbox = document.getElementById("lightbox");
+      circosImg.addEventListener("click", () => lightbox.classList.add("open"));
+      lightbox.addEventListener("click", () =>
+        lightbox.classList.remove("open"),
+      );
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") lightbox.classList.remove("open");
+      });
+
+      function copyCode(btn) {
+        const code = btn
+          .closest(".code-block")
+          .querySelector("pre code").innerText;
+        navigator.clipboard.writeText(code).then(() => {
+          const old = btn.textContent;
+          btn.textContent = "Скопировано";
+          setTimeout(() => (btn.textContent = old), 1500);
+        });
+      }
+    </script>
+  </body>
+</html>
